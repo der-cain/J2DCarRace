@@ -2,6 +2,8 @@ package de.mklein.J2DCarRace;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.util.Random;
+
 import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
@@ -91,7 +93,7 @@ public class PhysicsCarRace {
 
 	private void setUpObjects() {
 
-		m_camera = new Camera(new Vec2(0.0f, 0.0f), 15.0f, 0.05f);
+		m_camera = new Camera(new Vec2(0.0f, 0.0f), 25.0f, 0.05f);
 		m_camera.getTransform().setExtents(WINDOW_DIMENSIONS[0] / 2, WINDOW_DIMENSIONS[1] / 2);
 
 		LwjglDebugDraw dd = new LwjglDebugDraw();
@@ -101,7 +103,7 @@ public class PhysicsCarRace {
 		dd.setViewportTransform(m_camera.getTransform());
 		m_world.setDebugDraw(dd);
 
-		float hz = 4.0f;
+		float hz = 5.0f;
 		float zeta = 0.7f;
 
 		// Car
@@ -121,20 +123,20 @@ public class PhysicsCarRace {
 
 			BodyDef bd = new BodyDef();
 			bd.type = BodyType.DYNAMIC;
-			bd.position.set(0.0f, 1.0f);
+			bd.position.set(0.0f, 5.0f);
 			m_car = m_world.createBody(bd);
-			m_car.createFixture(chassis, 1.0f);
+			m_car.createFixture(chassis, 5.0f);
 
 			FixtureDef fd = new FixtureDef();
 			fd.shape = circle;
-			fd.density = 1.0f;
+			fd.density = 3.0f;
 			fd.friction = 0.9f;
 
-			bd.position.set(-1.0f, 0.35f);
+			bd.position.set(-1.0f, 4.35f);
 			Body wheel1 = m_world.createBody(bd);
 			wheel1.createFixture(fd);
 
-			bd.position.set(1.0f, 0.4f);
+			bd.position.set(1.0f, 4.4f);
 			Body wheel2 = m_world.createBody(bd);
 			wheel2.createFixture(fd);
 
@@ -158,19 +160,32 @@ public class PhysicsCarRace {
 			m_spring2 = (WheelJoint) m_world.createJoint(jd);
 		}
 
-		BodyDef groundDef = new BodyDef();
+		createGround();
+	}
+
+	private void createGround() {
+		Random rGenerator = new Random();
+		float x = -10.0f, y = 1.0f, step = 0.2f, steepness = 0.1f;
+	    BodyDef groundDef = new BodyDef();
 		groundDef.position.set(0, 0);
 		groundDef.type = BodyType.STATIC;
-		PolygonShape groundShape = new PolygonShape();
-		groundShape.setAsBox(1000, 0);
 		Body ground = m_world.createBody(groundDef);
 		FixtureDef groundFixture = new FixtureDef();
 		groundFixture.density = 1;
+		groundFixture.friction = 1.0f;
 		groundFixture.restitution = 0.3f;
-		groundFixture.shape = groundShape;
-		ground.createFixture(groundFixture);
-
-	}
+		for(int i = 0; i*step < 500.0f; i++) {
+			PolygonShape groundShape = new PolygonShape();
+	    	Vec2[] vertices = new Vec2[4];
+	    	vertices[0] = new Vec2(x + (i-1)*step, 	y);
+	    	vertices[1] = new Vec2(x + i*step, 		y += steepness * (rGenerator.nextInt(3) - 1) );
+	    	vertices[2] = new Vec2(x + i*step, 		-10.0f );
+	    	vertices[3] = new Vec2(x + (i-1)*step, 	-10.0f );
+			groundShape.set(vertices, 4);
+			groundFixture.shape = groundShape;
+			ground.createFixture(groundFixture);
+	    }
+    }
 
 	private void update() {
 		Display.update();
