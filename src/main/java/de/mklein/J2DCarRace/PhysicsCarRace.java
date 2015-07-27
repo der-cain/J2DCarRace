@@ -22,7 +22,7 @@ import de.mklein.J2DCarRace.debug.LwjglDebugDraw;
 public class PhysicsCarRace {
 
 	private static final String WINDOW_TITLE      = "2D Car Race";
-	private static final int[]  WINDOW_DIMENSIONS = { 640, 480 };
+	private static final int[]  WINDOW_DIMENSIONS = { 800, 600 };
 
 	private final World         m_world           = new World(new Vec2(0, -9.8f));
 	private WheelJoint          m_spring1;
@@ -43,6 +43,7 @@ public class PhysicsCarRace {
 	}
 
 	private void input() {
+		// process motor
 		if (Keyboard.isKeyDown(Keyboard.KEY_A)
 		        && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
 			m_spring1.enableMotor(true);
@@ -64,14 +65,24 @@ public class PhysicsCarRace {
 			m_spring1.enableMotor(false);
 			m_spring2.enableMotor(false);
 		}
+		
+		// process angular turn
+		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)
+		        && !Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
+			m_car.applyAngularImpulse(-1.5f);
+		} else if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)
+		        && !Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
+			m_car.applyAngularImpulse(1.5f);			
+		}
+		
 		for (Body body = m_world.getBodyList(); body != null; body = body.getNext()) {
 			if (body.getType() == BodyType.DYNAMIC) {
 				if (Mouse.isButtonDown(0)) {
 					Vec2 mousePosition = new Vec2(Mouse.getX(), Mouse.getY());
-					m_camera.getTransform().getScreenVectorToWorld(mousePosition, mousePosition);
+					m_camera.getTransform().getScreenToWorld(mousePosition, mousePosition);
 					Vec2 bodyPosition = body.getPosition();
 					Vec2 force = mousePosition.sub(bodyPosition);
-					body.applyForce(force, body.getPosition());
+					body.applyForce(force.mul(5.0f), body.getPosition());
 				}
 			}
 		}
@@ -93,17 +104,16 @@ public class PhysicsCarRace {
 
 	private void setUpObjects() {
 
-		m_camera = new Camera(new Vec2(0.0f, 0.0f), 25.0f, 0.05f);
+		m_camera = new Camera(new Vec2(0.0f, 0.0f), 15.0f, 0.05f);
 		m_camera.getTransform().setExtents(WINDOW_DIMENSIONS[0] / 2, WINDOW_DIMENSIONS[1] / 2);
 
 		LwjglDebugDraw dd = new LwjglDebugDraw();
 		dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit |
-		// DebugDraw.e_jointBit | DebugDraw.e_pairBit);
+		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
 		dd.setViewportTransform(m_camera.getTransform());
 		m_world.setDebugDraw(dd);
 
-		float hz = 5.0f;
+		float hz = 8.0f;
 		float zeta = 0.7f;
 
 		// Car
@@ -129,8 +139,9 @@ public class PhysicsCarRace {
 
 			FixtureDef fd = new FixtureDef();
 			fd.shape = circle;
-			fd.density = 3.0f;
-			fd.friction = 0.9f;
+			fd.density = 1.0f;
+			fd.friction = 1.0f;
+			fd.restitution = 1.0f;
 
 			bd.position.set(-1.0f, 4.35f);
 			Body wheel1 = m_world.createBody(bd);
@@ -145,7 +156,7 @@ public class PhysicsCarRace {
 
 			jd.initialize(m_car, wheel1, wheel1.getPosition(), axis);
 			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 20.0f;
+			jd.maxMotorTorque = 60.0f;
 			jd.enableMotor = true;
 			jd.frequencyHz = hz;
 			jd.dampingRatio = zeta;
@@ -153,7 +164,7 @@ public class PhysicsCarRace {
 
 			jd.initialize(m_car, wheel2, wheel2.getPosition(), axis);
 			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 10.0f;
+			jd.maxMotorTorque = 40.0f;
 			jd.enableMotor = true;
 			jd.frequencyHz = hz;
 			jd.dampingRatio = zeta;
@@ -178,7 +189,7 @@ public class PhysicsCarRace {
 			PolygonShape groundShape = new PolygonShape();
 	    	Vec2[] vertices = new Vec2[4];
 	    	vertices[0] = new Vec2(x + (i-1)*step, 	y);
-	    	vertices[1] = new Vec2(x + i*step, 		y += steepness * (rGenerator.nextInt(3) - 1) );
+	    	vertices[1] = new Vec2(x + i*step, 		y += steepness * (rGenerator.nextInt(3) - 1));
 	    	vertices[2] = new Vec2(x + i*step, 		-10.0f );
 	    	vertices[3] = new Vec2(x + (i-1)*step, 	-10.0f );
 			groundShape.set(vertices, 4);
