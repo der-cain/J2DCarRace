@@ -23,23 +23,9 @@
  ******************************************************************************/
 package de.mklein.J2DCarRace.debug;
 
-import static org.lwjgl.opengl.GL11.GL_LINES;
-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
-import static org.lwjgl.opengl.GL11.GL_POINTS;
-import static org.lwjgl.opengl.GL11.GL_TRIANGLE_FAN;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glColor3f;
-import static org.lwjgl.opengl.GL11.glColor4b;
-import static org.lwjgl.opengl.GL11.glColor4f;
-import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glMultMatrix;
-import static org.lwjgl.opengl.GL11.glPointSize;
-import static org.lwjgl.opengl.GL11.glPopMatrix;
-import static org.lwjgl.opengl.GL11.glPushMatrix;
-import static org.lwjgl.opengl.GL11.glTranslatef;
-import static org.lwjgl.opengl.GL11.glVertex2f;
-import static org.lwjgl.opengl.GL11.glVertex3f;
+import static org.lwjgl.opengl.GL11.*;
 
+import java.awt.Font;
 import java.nio.FloatBuffer;
 
 import org.jbox2d.callbacks.DebugDraw;
@@ -51,11 +37,16 @@ import org.jbox2d.common.Transform;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.particle.ParticleColor;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.newdawn.slick.Color;
+import org.newdawn.slick.TrueTypeFont;
 
 public class LwjglDebugDraw extends DebugDraw {
 
 	private static final int NUM_CIRCLE_POINTS = 13;
 
+	private final TrueTypeFont text;
+	
 	private final float[] mat = new float[16];
 	FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 	
@@ -70,6 +61,10 @@ public class LwjglDebugDraw extends DebugDraw {
 		mat[7] = 0;
 		mat[11] = 0;
 		mat[15] = 1;
+		
+		// load a default java font
+		Font awtFont = new Font("Times New Roman", Font.BOLD, 24);
+		text = new TrueTypeFont(awtFont, false);	
 	}
 
 	@Override
@@ -356,9 +351,12 @@ public class LwjglDebugDraw extends DebugDraw {
 
 	@Override
 	public void drawString(float x, float y, String s, Color3f color) {
-		// text.beginRendering(panel.getWidth(), panel.getHeight());
-		// text.setColor(color.x, color.y, color.z, 1);
-		// text.draw(s, (int) x, panel.getHeight() - (int) y);
-		// text.endRendering();
+		glEnable(GL_TEXTURE_2D);
+		glPushMatrix();
+		glScalef(1.0f, -1.0f, 1.0f);
+		text.drawString(x, - 2 * viewportTransform.getExtents().y + y, s, Color.white);
+//		glScalef(1.0f, -1.0f, 1.0f);
+		glPopMatrix();
+		glDisable(GL_TEXTURE_2D);
 	}
 }

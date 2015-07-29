@@ -7,6 +7,7 @@ import java.util.Random;
 import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
+import org.jbox2d.common.Color3f;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
 import org.jbox2d.dynamics.joints.WheelJoint;
@@ -25,6 +26,7 @@ public class PhysicsCarRace {
 	private static final int[]  WINDOW_DIMENSIONS = { 800, 600 };
 
 	private final World         m_world           = new World(new Vec2(0, -9.8f));
+	private DebugDraw     		m_dd;
 	private WheelJoint          m_spring1;
 	private WheelJoint          m_spring2;
 	private float               m_speed           = 50.0f;
@@ -34,6 +36,7 @@ public class PhysicsCarRace {
 
 	private void render() {
 		glClear(GL_COLOR_BUFFER_BIT);
+		m_dd.drawString(30, 30, "ABCDE", Color3f.WHITE);
 		m_world.drawDebugData();
 	}
 
@@ -69,10 +72,10 @@ public class PhysicsCarRace {
 		// process angular turn
 		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)
 		        && !Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-			m_car.applyAngularImpulse(-1.5f);
+			m_car.applyAngularImpulse(-2.0f);
 		} else if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)
 		        && !Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-			m_car.applyAngularImpulse(1.5f);			
+			m_car.applyAngularImpulse(2.0f);			
 		}
 		
 		for (Body body = m_world.getBodyList(); body != null; body = body.getNext()) {
@@ -107,47 +110,47 @@ public class PhysicsCarRace {
 		m_camera = new Camera(new Vec2(0.0f, 0.0f), 15.0f, 0.05f);
 		m_camera.getTransform().setExtents(WINDOW_DIMENSIONS[0] / 2, WINDOW_DIMENSIONS[1] / 2);
 
-		LwjglDebugDraw dd = new LwjglDebugDraw();
-		dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
+		m_dd = new LwjglDebugDraw();
+		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
 		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		dd.setViewportTransform(m_camera.getTransform());
-		m_world.setDebugDraw(dd);
+		m_dd.setViewportTransform(m_camera.getTransform());
+		m_world.setDebugDraw(m_dd);
 
-		float hz = 8.0f;
+		float hz = 5.0f;
 		float zeta = 0.7f;
 
 		// Car
 		{
 			PolygonShape chassis = new PolygonShape();
 			Vec2 vertices[] = new Vec2[8];
-			vertices[0] = new Vec2(-1.5f, -0.5f);
-			vertices[1] = new Vec2(1.5f, -0.5f);
-			vertices[2] = new Vec2(1.5f, 0.0f);
+			vertices[0] = new Vec2(-1.8f, -0.5f);
+			vertices[1] = new Vec2(1.8f, -0.5f);
+			vertices[2] = new Vec2(1.8f, 0.0f);
 			vertices[3] = new Vec2(0.0f, 0.9f);
 			vertices[4] = new Vec2(-1.15f, 0.9f);
-			vertices[5] = new Vec2(-1.5f, 0.2f);
+			vertices[5] = new Vec2(-1.8f, 0.2f);
 			chassis.set(vertices, 6);
 
 			CircleShape circle = new CircleShape();
-			circle.m_radius = 0.4f;
+			circle.m_radius = 0.8f;
 
 			BodyDef bd = new BodyDef();
 			bd.type = BodyType.DYNAMIC;
 			bd.position.set(0.0f, 5.0f);
 			m_car = m_world.createBody(bd);
-			m_car.createFixture(chassis, 5.0f);
+			m_car.createFixture(chassis, 7.0f);
 
 			FixtureDef fd = new FixtureDef();
 			fd.shape = circle;
-			fd.density = 1.0f;
+			fd.density = 0.3f;
 			fd.friction = 1.0f;
 			fd.restitution = 1.0f;
 
-			bd.position.set(-1.0f, 4.35f);
+			bd.position.set(-1.2f, 4.0f);
 			Body wheel1 = m_world.createBody(bd);
 			wheel1.createFixture(fd);
 
-			bd.position.set(1.0f, 4.4f);
+			bd.position.set(1.2f, 4.05f);
 			Body wheel2 = m_world.createBody(bd);
 			wheel2.createFixture(fd);
 
@@ -156,7 +159,7 @@ public class PhysicsCarRace {
 
 			jd.initialize(m_car, wheel1, wheel1.getPosition(), axis);
 			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 60.0f;
+			jd.maxMotorTorque = 40.0f;
 			jd.enableMotor = true;
 			jd.frequencyHz = hz;
 			jd.dampingRatio = zeta;
@@ -164,7 +167,7 @@ public class PhysicsCarRace {
 
 			jd.initialize(m_car, wheel2, wheel2.getPosition(), axis);
 			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 40.0f;
+			jd.maxMotorTorque = 30.0f;
 			jd.enableMotor = true;
 			jd.frequencyHz = hz;
 			jd.dampingRatio = zeta;
