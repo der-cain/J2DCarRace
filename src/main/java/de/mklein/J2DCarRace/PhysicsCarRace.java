@@ -2,217 +2,47 @@ package de.mklein.J2DCarRace;
 
 import static org.lwjgl.opengl.GL11.*;
 
-import java.util.Random;
+import java.util.Stack;
 
-import org.jbox2d.callbacks.DebugDraw;
-import org.jbox2d.collision.shapes.CircleShape;
-import org.jbox2d.collision.shapes.PolygonShape;
-import org.jbox2d.common.Color3f;
-import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.*;
-import org.jbox2d.dynamics.joints.WheelJoint;
-import org.jbox2d.dynamics.joints.WheelJointDef;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
-import de.mklein.J2DCarRace.debug.LwjglDebugDraw;
+import de.mklein.J2DCarRace.state.GameScreenIF;
+import de.mklein.J2DCarRace.state.Menu;
 
 public class PhysicsCarRace {
 
-	private static final String WINDOW_TITLE      = "2D Car Race";
-	private static final int[]  WINDOW_DIMENSIONS = { 800, 600 };
+	public static final String 		WINDOW_TITLE      	= "J2D Car Race";
+	public static final int[]  		WINDOW_DIMENSIONS 	= { 800, 600 };
+	
+	private GameScreenIF 	   		m_screen 			= null;
+	private Stack<GameScreenIF> 	m_screenStack		= new Stack<GameScreenIF>();
 
-	private final World         m_world           = new World(new Vec2(0, -9.8f));
-	private DebugDraw     		m_dd;
-	private WheelJoint          m_spring1;
-	private WheelJoint          m_spring2;
-	private float               m_speed           = 50.0f;
-
-	protected Camera            m_camera          = null;
-	protected Body              m_car;
-
-	private void render() {
-		glClear(GL_COLOR_BUFFER_BIT);
-		m_dd.drawString(30, 30, "ABCDE", Color3f.WHITE);
-		m_world.drawDebugData();
-	}
-
-	private void logic() {
-		m_world.step(1 / 60f, 8, 3);
-		m_camera.setCamera(m_car.getWorldCenter());
-	}
-
-	private void input() {
-		// process motor
-		if (Keyboard.isKeyDown(Keyboard.KEY_A)
-		        && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
-			m_spring1.enableMotor(true);
-			m_spring1.setMotorSpeed(m_speed);
-			m_spring2.enableMotor(true);
-			m_spring2.setMotorSpeed(m_speed);
-		} else if (Keyboard.isKeyDown(Keyboard.KEY_D)
-		        && !Keyboard.isKeyDown(Keyboard.KEY_A)) {
-			m_spring1.enableMotor(true);
-			m_spring1.setMotorSpeed(-m_speed);
-			m_spring2.enableMotor(true);
-			m_spring2.setMotorSpeed(-m_speed);
-		} else if (Keyboard.isKeyDown(Keyboard.KEY_S)) {
-			m_spring1.enableMotor(true);
-			m_spring1.setMotorSpeed(0.0f);
-			m_spring2.enableMotor(true);
-			m_spring2.setMotorSpeed(0.0f);
-		} else {
-			m_spring1.enableMotor(false);
-			m_spring2.enableMotor(false);
+	public void openScreen(GameScreenIF newScreen) {
+		if(m_screen != null) {
+			m_screen.exit();
+			m_screenStack.push(m_screen);
 		}
-		
-		// process angular turn
-		if(Keyboard.isKeyDown(Keyboard.KEY_RIGHT)
-		        && !Keyboard.isKeyDown(Keyboard.KEY_LEFT)) {
-			m_car.applyAngularImpulse(-2.0f);
-		} else if(Keyboard.isKeyDown(Keyboard.KEY_LEFT)
-		        && !Keyboard.isKeyDown(Keyboard.KEY_RIGHT)) {
-			m_car.applyAngularImpulse(2.0f);			
-		}
-		
-		for (Body body = m_world.getBodyList(); body != null; body = body.getNext()) {
-			if (body.getType() == BodyType.DYNAMIC) {
-				if (Mouse.isButtonDown(0)) {
-					Vec2 mousePosition = new Vec2(Mouse.getX(), Mouse.getY());
-					m_camera.getTransform().getScreenToWorld(mousePosition, mousePosition);
-					Vec2 bodyPosition = body.getPosition();
-					Vec2 force = mousePosition.sub(bodyPosition);
-					body.applyForce(force.mul(5.0f), body.getPosition());
-				}
-			}
-		}
+		m_screen = newScreen;
+		setUpObjects();
+		setUpMatrices();
 	}
-
+	
+	public void exitScreen() {
+		m_screen.exit();
+		if(m_screenStack.isEmpty()) {
+			cleanUp(false);
+		}
+		m_screen = m_screenStack.pop();
+		setUpObjects();
+		setUpMatrices();
+	}
+	
 	private void cleanUp(boolean asCrash) {
 		Display.destroy();
 		System.exit(asCrash ? 1 : 0);
-	}
-
-	private void setUpMatrices() {
-		glMatrixMode(GL_PROJECTION);
-		glOrtho(0, WINDOW_DIMENSIONS[0], 0, WINDOW_DIMENSIONS[1], 1, -1);
-		
-		glMatrixMode(GL_MODELVIEW);
-	    glLoadIdentity();
-	    glViewport(0, 0, WINDOW_DIMENSIONS[0], WINDOW_DIMENSIONS[1]);
-	}
-
-	private void setUpObjects() {
-
-		m_camera = new Camera(new Vec2(0.0f, 0.0f), 15.0f, 0.05f);
-		m_camera.getTransform().setExtents(WINDOW_DIMENSIONS[0] / 2, WINDOW_DIMENSIONS[1] / 2);
-
-		m_dd = new LwjglDebugDraw();
-		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		m_dd.setViewportTransform(m_camera.getTransform());
-		m_world.setDebugDraw(m_dd);
-
-		float hz = 5.0f;
-		float zeta = 0.7f;
-
-		// Car
-		{
-			PolygonShape chassis = new PolygonShape();
-			Vec2 vertices[] = new Vec2[8];
-			vertices[0] = new Vec2(-1.8f, -0.5f);
-			vertices[1] = new Vec2(1.8f, -0.5f);
-			vertices[2] = new Vec2(1.8f, 0.0f);
-			vertices[3] = new Vec2(0.0f, 0.9f);
-			vertices[4] = new Vec2(-1.15f, 0.9f);
-			vertices[5] = new Vec2(-1.8f, 0.2f);
-			chassis.set(vertices, 6);
-
-			CircleShape circle = new CircleShape();
-			circle.m_radius = 0.8f;
-
-			BodyDef bd = new BodyDef();
-			bd.type = BodyType.DYNAMIC;
-			bd.position.set(0.0f, 5.0f);
-			m_car = m_world.createBody(bd);
-			m_car.createFixture(chassis, 7.0f);
-
-			FixtureDef fd = new FixtureDef();
-			fd.shape = circle;
-			fd.density = 0.3f;
-			fd.friction = 1.0f;
-			fd.restitution = 1.0f;
-
-			bd.position.set(-1.2f, 4.0f);
-			Body wheel1 = m_world.createBody(bd);
-			wheel1.createFixture(fd);
-
-			bd.position.set(1.2f, 4.05f);
-			Body wheel2 = m_world.createBody(bd);
-			wheel2.createFixture(fd);
-
-			WheelJointDef jd = new WheelJointDef();
-			Vec2 axis = new Vec2(0.0f, 1.0f);
-
-			jd.initialize(m_car, wheel1, wheel1.getPosition(), axis);
-			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 40.0f;
-			jd.enableMotor = true;
-			jd.frequencyHz = hz;
-			jd.dampingRatio = zeta;
-			m_spring1 = (WheelJoint) m_world.createJoint(jd);
-
-			jd.initialize(m_car, wheel2, wheel2.getPosition(), axis);
-			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 30.0f;
-			jd.enableMotor = true;
-			jd.frequencyHz = hz;
-			jd.dampingRatio = zeta;
-			m_spring2 = (WheelJoint) m_world.createJoint(jd);
-		}
-
-		createGround();
-	}
-
-	private void createGround() {
-		Random rGenerator = new Random();
-		float x = -10.0f, y = 1.0f, step = 0.2f, steepness = 0.1f;
-	    BodyDef groundDef = new BodyDef();
-		groundDef.position.set(0, 0);
-		groundDef.type = BodyType.STATIC;
-		Body ground = m_world.createBody(groundDef);
-		FixtureDef groundFixture = new FixtureDef();
-		groundFixture.density = 1;
-		groundFixture.friction = 1.0f;
-		groundFixture.restitution = 0.3f;
-		for(int i = 0; i*step < 500.0f; i++) {
-			PolygonShape groundShape = new PolygonShape();
-	    	Vec2[] vertices = new Vec2[4];
-	    	vertices[0] = new Vec2(x + (i-1)*step, 	y);
-	    	vertices[1] = new Vec2(x + i*step, 		y += steepness * (rGenerator.nextInt(3) - 1));
-	    	vertices[2] = new Vec2(x + i*step, 		-10.0f );
-	    	vertices[3] = new Vec2(x + (i-1)*step, 	-10.0f );
-			groundShape.set(vertices, 4);
-			groundFixture.shape = groundShape;
-			ground.createFixture(groundFixture);
-	    }
-    }
-
-	private void update() {
-		Display.update();
-		Display.sync(60);
-	}
-
-	private void enterGameLoop() {
-		while (!Display.isCloseRequested()) {
-			render();
-			logic();
-			input();
-			update();
-		}
 	}
 
 	private void setUpDisplay() {
@@ -230,12 +60,70 @@ public class PhysicsCarRace {
 		}
 	}
 
+	private void setUpObjects() {
+	    m_screen.setUpObjects();
+    }
+
+	private void setUpMatrices() {
+		glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+		glOrtho(0, PhysicsCarRace.WINDOW_DIMENSIONS[0], 0, PhysicsCarRace.WINDOW_DIMENSIONS[1], 1, -1);
+		
+		glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
+	    glViewport(0, 0, PhysicsCarRace.WINDOW_DIMENSIONS[0], PhysicsCarRace.WINDOW_DIMENSIONS[1]);
+	    
+	    m_screen.setUpMatrices();
+    }
+	
+	private void render() {
+		glClear(GL_COLOR_BUFFER_BIT);
+		m_screen.render();
+	}
+
+	private void update() {
+		Display.update();
+		Display.sync(60);
+	}
+	
+	private void input() {
+		m_screen.input();
+		// process keystrokes
+		while(Keyboard.next()) {
+			// process screen specific input
+			m_screen.keystrokes();
+			
+			switch(Keyboard.getEventKey()) {
+			case Keyboard.KEY_ESCAPE:
+				if(Keyboard.getEventKeyState()) {
+					if(Keyboard.isRepeatEvent()) {
+						// Key is held down
+					} else {
+						// Key was pressed
+						exitScreen();
+					}
+				} else {
+					// Key is released
+				}
+				break;
+			}			
+		}
+	}
+	
+	public void enterGameLoop() {
+		while (!Display.isCloseRequested()) {
+			render();
+			m_screen.logic();
+			input();
+			update();
+		}
+	}
+
 	public static void main(String[] args) {
 		PhysicsCarRace phyCarRace = new PhysicsCarRace();
 		phyCarRace.setUpDisplay();
-		phyCarRace.setUpObjects();
-		phyCarRace.setUpMatrices();
+		phyCarRace.openScreen(new Menu(phyCarRace));
 		phyCarRace.enterGameLoop();
-		phyCarRace.cleanUp(false);
 	}
+
 }

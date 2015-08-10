@@ -354,7 +354,8 @@ public class LwjglDebugDraw extends DebugDraw {
 		glEnable(GL_TEXTURE_2D);
 		glPushMatrix();
 		glScalef(1.0f, -1.0f, 1.0f);
-		text.drawString(x, - 2 * viewportTransform.getExtents().y + y, s, Color.white);
+		Color c = new Color(color.x, color.y, color.z);
+		text.drawString(x, - 2 * viewportTransform.getExtents().y + y, s, c);
 //		glScalef(1.0f, -1.0f, 1.0f);
 		glPopMatrix();
 		glDisable(GL_TEXTURE_2D);
