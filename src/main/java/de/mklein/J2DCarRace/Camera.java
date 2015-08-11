@@ -78,9 +78,9 @@ public class Camera {
 
 	    Vec2 transformedMove = oldCenter.subLocal(newCenter);
 	    // set, just in case bad impl by someone
-	    if (!transform.isYFlip()) {
-	      transformedMove.y = -transformedMove.y;
-	    }
+//	    if (!transform.isYFlip()) {
+//	      transformedMove.y = -transformedMove.y;
+//	    }
 	    transform.setCenter(transform.getCenter().addLocal(transformedMove));
 	  }
 

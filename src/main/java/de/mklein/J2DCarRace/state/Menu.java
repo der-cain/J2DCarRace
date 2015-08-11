@@ -15,10 +15,10 @@ public class Menu implements GameScreenIF {
 	protected Camera    m_camera = null;
 
 	enum MenuItems {
-		START, MULTIPLAYER, SETTINGS, QUIT
+		CARRACE, TOWERBUILDER, SETTINGS, QUIT
 	}
 
-	MenuItems                active = MenuItems.START;
+	MenuItems                active = MenuItems.CARRACE;
 
 	protected PhysicsCarRace g;
 
@@ -66,8 +66,15 @@ public class Menu implements GameScreenIF {
 			break;
 		case Keyboard.KEY_RETURN:
 			switch (active) {
-			case START:
+			case CARRACE:
 				g.openScreen(new Race(g));
+				break;
+			case TOWERBUILDER:
+				g.openScreen(new Towerbuilder(g));
+				break;
+			case QUIT:
+				g.exitScreen();
+				break;
 			default:
 				break;
 			}
@@ -123,5 +130,11 @@ public class Menu implements GameScreenIF {
 		// nothing here atm
 
 	}
+
+	@Override
+    public void pause() {
+	    // nothing here atm
+	    
+    }
 
 }

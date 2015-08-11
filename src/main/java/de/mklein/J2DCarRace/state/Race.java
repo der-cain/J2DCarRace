@@ -205,4 +205,10 @@ public class Race implements GameScreenIF {
 	    
     }
 
+	@Override
+    public void pause() {
+	    // TODO Auto-generated method stub
+	    
+    }
+
 }

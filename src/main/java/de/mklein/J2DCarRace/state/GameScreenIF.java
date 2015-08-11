@@ -7,5 +7,6 @@ public interface GameScreenIF {
 	void render();
 	void setUpObjects();
 	void setUpMatrices();
+	void pause();
 	void exit();
 }

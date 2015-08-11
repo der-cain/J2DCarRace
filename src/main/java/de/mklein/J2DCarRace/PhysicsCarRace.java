@@ -22,7 +22,7 @@ public class PhysicsCarRace {
 
 	public void openScreen(GameScreenIF newScreen) {
 		if(m_screen != null) {
-			m_screen.exit();
+			m_screen.pause();
 			m_screenStack.push(m_screen);
 		}
 		m_screen = newScreen;
@@ -73,7 +73,10 @@ public class PhysicsCarRace {
 	    glLoadIdentity();
 	    glViewport(0, 0, PhysicsCarRace.WINDOW_DIMENSIONS[0], PhysicsCarRace.WINDOW_DIMENSIONS[1]);
 	    
-	    m_screen.setUpMatrices();
+	    // Disable texturing in the beginning
+		glDisable(GL_TEXTURE_2D);
+
+		m_screen.setUpMatrices();
     }
 	
 	private void render() {
