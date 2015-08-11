@@ -5,6 +5,7 @@ import static org.lwjgl.opengl.GL11.*;
 import java.util.Stack;
 
 import org.lwjgl.LWJGLException;
+import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
@@ -20,6 +21,11 @@ public class PhysicsCarRace {
 	private GameScreenIF 	   		m_screen 			= null;
 	private Stack<GameScreenIF> 	m_screenStack		= new Stack<GameScreenIF>();
 
+    /** frames per second */
+    int fps;
+    /** last fps time */
+    long lastFPS;
+ 
 	public void openScreen(GameScreenIF newScreen) {
 		if(m_screen != null) {
 			m_screen.pause();
@@ -87,13 +93,14 @@ public class PhysicsCarRace {
 	private void update() {
 		Display.update();
 		Display.sync(60);
+		updateFPS();
 	}
 	
 	private void input() {
 		m_screen.input();
-		// process keystrokes
+		// process buffered keystrokes
 		while(Keyboard.next()) {
-			// process screen specific input
+			// process screen specific keystrokes
 			m_screen.keystrokes();
 			
 			switch(Keyboard.getEventKey()) {
@@ -114,6 +121,7 @@ public class PhysicsCarRace {
 	}
 	
 	public void enterGameLoop() {
+		lastFPS = getTime();
 		while (!Display.isCloseRequested()) {
 			render();
 			m_screen.logic();
@@ -129,4 +137,25 @@ public class PhysicsCarRace {
 		phyCarRace.enterGameLoop();
 	}
 
+    /**
+     * Get the accurate system time
+     * 
+     * @return The system time in milliseconds
+     */
+    public long getTime() {
+        return (Sys.getTime() * 1000) / Sys.getTimerResolution();
+    }
+     
+    /**
+     * Calculate the FPS and set it in the title bar
+     */
+    public void updateFPS() {
+        if (getTime() - lastFPS > 1000) {
+            Display.setTitle(WINDOW_TITLE + " - FPS: " + fps);
+            fps = 0;
+            lastFPS += 1000;
+        }
+        fps++;
+    }
+     
 }

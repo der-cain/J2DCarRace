@@ -98,7 +98,7 @@ public class Menu implements GameScreenIF {
 			} else {
 				color = Color3f.WHITE;
 			}
-			m_dd.drawString(30, 30 + 30 * m_item.ordinal(), m_item.toString(), color);
+			m_dd.drawString(30, 30 + 18 * m_item.ordinal(), m_item.toString(), color);
 		}
 	}
 
