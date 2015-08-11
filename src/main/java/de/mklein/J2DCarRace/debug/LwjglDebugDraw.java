@@ -29,15 +29,9 @@ import java.awt.Font;
 import java.nio.FloatBuffer;
 
 import org.jbox2d.callbacks.DebugDraw;
-import org.jbox2d.common.Color3f;
-import org.jbox2d.common.IViewportTransform;
-import org.jbox2d.common.Mat22;
-import org.jbox2d.common.MathUtils;
-import org.jbox2d.common.Transform;
-import org.jbox2d.common.Vec2;
+import org.jbox2d.common.*;
 import org.jbox2d.particle.ParticleColor;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
 import org.newdawn.slick.Color;
 import org.newdawn.slick.TrueTypeFont;
 
@@ -63,7 +57,7 @@ public class LwjglDebugDraw extends DebugDraw {
 		mat[15] = 1;
 		
 		// load a default java font
-		Font awtFont = new Font("Times New Roman", Font.BOLD, 24);
+		Font awtFont = new Font("Courier New", Font.PLAIN, 12);
 		text = new TrueTypeFont(awtFont, false);	
 	}
 
