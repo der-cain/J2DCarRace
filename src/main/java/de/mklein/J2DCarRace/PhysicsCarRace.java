@@ -20,11 +20,13 @@ public class PhysicsCarRace {
 	
 	private GameScreenIF 	   		m_screen 			= null;
 	private Stack<GameScreenIF> 	m_screenStack		= new Stack<GameScreenIF>();
-
+	
+	/** can be used to do calculations only every X-th frame using modulo */
+	protected long framecounter = 0L;
     /** frames per second */
-    int fps;
+    protected int fps;
     /** last fps time */
-    long lastFPS;
+    protected long lastFPS;
  
 	public void openScreen(GameScreenIF newScreen) {
 		if(m_screen != null) {
@@ -46,6 +48,10 @@ public class PhysicsCarRace {
 		setUpMatrices();
 	}
 	
+	public long getFramecounter() {
+		return framecounter;
+	}
+
 	private void cleanUp(boolean asCrash) {
 		Display.destroy();
 		System.exit(asCrash ? 1 : 0);
@@ -123,6 +129,7 @@ public class PhysicsCarRace {
 	public void enterGameLoop() {
 		lastFPS = getTime();
 		while (!Display.isCloseRequested()) {
+			framecounter++;
 			render();
 			m_screen.logic();
 			input();

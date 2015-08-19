@@ -97,7 +97,12 @@ public class Towerbuilder implements GameScreenIF {
 		bd.position.set(0.0f, 3.0f);
 		m_box = m_world.createBody(bd);
 		m_box.createFixture(boxShape, 1.0f);
-	}
+
+		// create a dynamic sample box
+		bd.position.set(0.0f, 7.0f);
+		m_box = m_world.createBody(bd);
+		m_box.createFixture(boxShape, 1.0f);
+}
 
 	@Override
     public void setUpMatrices() {

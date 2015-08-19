@@ -18,29 +18,58 @@ import de.mklein.J2DCarRace.PhysicsCarRace;
 import de.mklein.J2DCarRace.debug.LwjglDebugDraw;
 
 public class Race implements GameScreenIF {
+	protected PhysicsCarRace g;
+
 	private final World         m_world           = new World(new Vec2(0, -9.8f));
 	private DebugDraw     		m_dd;
+	
+	protected Camera            m_camera          = null;
+	
+	/** All of this is car specific and should be moved to its own class */
 	private WheelJoint          m_spring1;
 	private WheelJoint          m_spring2;
 	private float               m_speed           = 50.0f;
 
-	protected Camera            m_camera          = null;
 	protected Body              m_car;
+	
+	protected Vec2 prevPos = new Vec2();
+	protected long prevTime = 0L;
 
-	protected PhysicsCarRace g;
+	protected long currTime;
+	protected Vec2 currPos;
+	protected float velocity = 0.0f;
+	/** end car specific */
 	
 	public Race(PhysicsCarRace g) {
 		this.g = g;
 	}
 	
 	public void render() {
-		m_dd.drawString(30, 30, "ABCDE", Color3f.WHITE);
+		m_dd.drawString(30, 30, "Car position: " + m_car.getWorldCenter(), Color3f.WHITE);
+		if(g.getFramecounter() % 20 == 0) {
+			updateVelocity();
+		}
+		m_dd.drawString(30, 54, "Car velocity: " + String.format("%.2f", velocity), Color3f.WHITE);
 		m_world.drawDebugData();
 	}
 	
+	private float updateVelocity() {
+		long deltaTime = currTime - prevTime;
+		Vec2 deltaPos = currPos.sub(prevPos);
+		velocity = deltaPos.length() / deltaTime * 60 * 60;
+		
+		prevTime = currTime;
+		prevPos = currPos;
+
+		return velocity;
+    }
+
 	public void logic() {
 		m_world.step(1 / 60f, 8, 3);
 		m_camera.setCamera(m_car.getWorldCenter());
+
+		currTime = g.getTime();
+		currPos = m_car.getWorldCenter().clone();
 	}
 
 	@Override
@@ -151,7 +180,7 @@ public class Race implements GameScreenIF {
 
 			jd.initialize(m_car, wheel1, wheel1.getPosition(), axis);
 			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 40.0f;
+			jd.maxMotorTorque = 50.0f;
 			jd.enableMotor = true;
 			jd.frequencyHz = hz;
 			jd.dampingRatio = zeta;
@@ -159,7 +188,7 @@ public class Race implements GameScreenIF {
 
 			jd.initialize(m_car, wheel2, wheel2.getPosition(), axis);
 			jd.motorSpeed = 0.0f;
-			jd.maxMotorTorque = 30.0f;
+			jd.maxMotorTorque = 40.0f;
 			jd.enableMotor = true;
 			jd.frequencyHz = hz;
 			jd.dampingRatio = zeta;
