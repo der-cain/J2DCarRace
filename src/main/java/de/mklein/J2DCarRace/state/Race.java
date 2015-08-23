@@ -7,24 +7,18 @@ import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Color3f;
 import org.jbox2d.common.Vec2;
-import org.jbox2d.dynamics.*;
+import org.jbox2d.dynamics.Body;
+import org.jbox2d.dynamics.BodyDef;
+import org.jbox2d.dynamics.BodyType;
+import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.joints.WheelJoint;
 import org.jbox2d.dynamics.joints.WheelJointDef;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import de.mklein.J2DCarRace.Camera;
 import de.mklein.J2DCarRace.PhysicsCarRace;
-import de.mklein.J2DCarRace.debug.LwjglDebugDraw;
 
-public class Race implements GameScreenIF {
-	protected PhysicsCarRace g;
-
-	private final World         m_world           = new World(new Vec2(0, -9.8f));
-	private DebugDraw     		m_dd;
-	
-	protected Camera            m_camera          = null;
-	
+public class Race extends GameScreenAB {
 	/** All of this is car specific and should be moved to its own class */
 	private WheelJoint          m_spring1;
 	private WheelJoint          m_spring2;
@@ -41,7 +35,7 @@ public class Race implements GameScreenIF {
 	/** end car specific */
 	
 	public Race(PhysicsCarRace g) {
-		this.g = g;
+		super(g);
 	}
 	
 	public void render() {
@@ -119,19 +113,12 @@ public class Race implements GameScreenIF {
 		}
     }
 
-	@Override
-	public void keystrokes() {
-		// empty for now
-	}
-
 	public void setUpObjects() {
 
 		Keyboard.enableRepeatEvents(true);
 
-		m_camera = new Camera(new Vec2(0.0f, 0.0f), 15.0f, 0.05f);
 		m_camera.getTransform().setExtents(PhysicsCarRace.WINDOW_DIMENSIONS[0] / 2, PhysicsCarRace.WINDOW_DIMENSIONS[1] / 2);
 
-		m_dd = new LwjglDebugDraw();
 		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
 		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
 		m_dd.setViewportTransform(m_camera.getTransform());
@@ -221,23 +208,4 @@ public class Race implements GameScreenIF {
 			ground.createFixture(groundFixture);
 	    }
     }
-
-	@Override
-    public void setUpMatrices() {
-	    // done in the main program
-	    
-    }
-
-	@Override
-    public void exit() {
-	    // nothing to do here, example: save the state of the game here
-	    
-    }
-
-	@Override
-    public void pause() {
-	    // TODO Auto-generated method stub
-	    
-    }
-
 }

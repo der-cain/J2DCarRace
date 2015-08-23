@@ -2,17 +2,11 @@ package de.mklein.J2DCarRace.state;
 
 import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.common.Color3f;
-import org.jbox2d.common.Vec2;
 import org.lwjgl.input.Keyboard;
 
-import de.mklein.J2DCarRace.Camera;
 import de.mklein.J2DCarRace.PhysicsCarRace;
-import de.mklein.J2DCarRace.debug.LwjglDebugDraw;
 
-public class Menu implements GameScreenIF {
-
-	protected DebugDraw m_dd;
-	protected Camera    m_camera = null;
+public class Menu extends GameScreenAB {
 
 	enum MenuItems {
 		CARRACE, TOWERBUILDER, SETTINGS, QUIT
@@ -20,22 +14,9 @@ public class Menu implements GameScreenIF {
 
 	MenuItems                active = MenuItems.CARRACE;
 
-	protected PhysicsCarRace g;
-
 	public Menu(PhysicsCarRace g) {
-		this.g = g;
+		super(g);
 	}
-
-	@Override
-	public void logic() {
-		return;
-	}
-
-	@Override
-    public void input() {
-	    // TODO Auto-generated method stub
-	    
-    }
 
 	@Override
 	public void keystrokes() {
@@ -104,12 +85,10 @@ public class Menu implements GameScreenIF {
 
 	@Override
 	public void setUpObjects() {
-		m_camera = new Camera(new Vec2(0.0f, 0.0f), 15.0f, 0.05f);
 		m_camera.getTransform().setExtents(
 		        PhysicsCarRace.WINDOW_DIMENSIONS[0] / 2,
 		        PhysicsCarRace.WINDOW_DIMENSIONS[1] / 2);
 
-		m_dd = new LwjglDebugDraw();
 		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit
 		        | DebugDraw.e_pairBit);
 		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit |
@@ -118,23 +97,4 @@ public class Menu implements GameScreenIF {
 
 		Keyboard.enableRepeatEvents(true);
 	}
-
-	@Override
-	public void setUpMatrices() {
-		// at the moment done in the main game
-
-	}
-
-	@Override
-	public void exit() {
-		// nothing here atm
-
-	}
-
-	@Override
-    public void pause() {
-	    // nothing here atm
-	    
-    }
-
 }

@@ -4,9 +4,11 @@ import static org.lwjgl.opengl.GL11.*;
 
 import java.util.Stack;
 
+import org.jbox2d.common.Vec2;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.DisplayMode;
 
@@ -21,6 +23,8 @@ public class PhysicsCarRace {
 	private GameScreenIF 	   		m_screen 			= null;
 	private Stack<GameScreenIF> 	m_screenStack		= new Stack<GameScreenIF>();
 	
+	private boolean mouseTracing;
+
 	/** can be used to do calculations only every X-th frame using modulo */
 	protected long framecounter = 0L;
     /** frames per second */
@@ -124,12 +128,42 @@ public class PhysicsCarRace {
 				break;
 			}			
 		}
+		
+		while(Mouse.next()) {
+			Vec2 mouse = new Vec2(Mouse.getX(), Mouse.getY());
+			if(Mouse.getEventButton() > -1) {
+				// Mouse button state has changed
+				if (Mouse.getEventButtonState()) {
+					// Button was pressed
+					m_screen.mouseDown(new Vec2(mouse), Mouse.getEventButton());
+					mouseTracing = true;
+				} else {
+					// Button was released
+					m_screen.mouseUp(new Vec2(mouse), Mouse.getEventButton());
+					mouseTracing = false;
+				}
+			} else {
+				// Mouse was moved
+				m_screen.mouseMove(new Vec2(mouse));
+				if(mouseTracing)
+					m_screen.mouseDrag(new Vec2(mouse), Mouse.getEventButton());
+			}
+		}
+
 	}
 	
+	public boolean pressedOnce(int key) {
+		if(Keyboard.getEventKey() == key) {
+			if(Keyboard.getEventKeyState()) {
+				return !Keyboard.isRepeatEvent();
+			}
+		}
+		return false;
+	}
+
 	public void enterGameLoop() {
 		lastFPS = getTime();
 		while (!Display.isCloseRequested()) {
-			framecounter++;
 			render();
 			m_screen.logic();
 			input();
@@ -163,6 +197,7 @@ public class PhysicsCarRace {
             lastFPS += 1000;
         }
         fps++;
+		framecounter++;
     }
      
 }
