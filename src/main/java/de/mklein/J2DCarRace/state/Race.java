@@ -2,7 +2,6 @@ package de.mklein.J2DCarRace.state;
 
 import java.util.Random;
 
-import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Color3f;
@@ -16,6 +15,7 @@ import org.jbox2d.dynamics.joints.WheelJointDef;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import de.mklein.J2DCarRace.Camera;
 import de.mklein.J2DCarRace.PhysicsCarRace;
 
 public class Race extends GameScreenAB {
@@ -67,7 +67,21 @@ public class Race extends GameScreenAB {
 	}
 
 	@Override
+	protected void zoomCamera() {
+		if (Mouse.isInsideWindow()) {
+			// Camera zooming
+			int notches = Mouse.getDWheel();
+			if (notches != 0) {
+				Camera.ZoomType zoom = notches < 0 ? Camera.ZoomType.ZOOM_OUT
+						: Camera.ZoomType.ZOOM_IN;
+				m_camera.zoomToWorldPoint(m_car.getWorldCenter(), zoom);
+			}
+		}		
+	}
+	
+	@Override
     public void input() {
+		zoomCamera();
 		// process motor
 		if (Keyboard.isKeyDown(Keyboard.KEY_A)
 		        && !Keyboard.isKeyDown(Keyboard.KEY_D)) {
@@ -114,16 +128,8 @@ public class Race extends GameScreenAB {
     }
 
 	public void setUpObjects() {
-
-		Keyboard.enableRepeatEvents(true);
-
-		m_camera.getTransform().setExtents(PhysicsCarRace.WINDOW_DIMENSIONS[0] / 2, PhysicsCarRace.WINDOW_DIMENSIONS[1] / 2);
-
-		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		m_dd.setViewportTransform(m_camera.getTransform());
-		m_world.setDebugDraw(m_dd);
-
+		super.setUpObjects();
+		
 		float hz = 7.0f;
 		float zeta = 0.7f;
 

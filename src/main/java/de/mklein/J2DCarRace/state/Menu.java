@@ -1,6 +1,5 @@
 package de.mklein.J2DCarRace.state;
 
-import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.common.Color3f;
 import org.lwjgl.input.Keyboard;
 
@@ -20,32 +19,11 @@ public class Menu extends GameScreenAB {
 
 	@Override
 	public void keystrokes() {
-		switch (Keyboard.getEventKey()) {
-		case Keyboard.KEY_DOWN:
-			if (Keyboard.getEventKeyState()) {
-				if (Keyboard.isRepeatEvent()) {
-					// Key is held down
-				} else {
-					// Key was pressed
-					active = ringCount(active.ordinal() + 1, MenuItems.values().length);
-				}
-			} else {
-				// Key is released
-			}
-			break;
-		case Keyboard.KEY_UP:
-			if (Keyboard.getEventKeyState()) {
-				if (Keyboard.isRepeatEvent()) {
-					// Key is held down
-				} else {
-					// Key was pressed
-					active = ringCount(active.ordinal() - 1, MenuItems.values().length);
-				}
-			} else {
-				// Key is released
-			}
-			break;
-		case Keyboard.KEY_RETURN:
+		if(g.pressedOnce(Keyboard.KEY_DOWN))
+			active = ringCount(active.ordinal() + 1, MenuItems.values().length);
+		if(g.pressedOnce(Keyboard.KEY_UP))
+			active = ringCount(active.ordinal() - 1, MenuItems.values().length);
+		if(g.pressedOnce(Keyboard.KEY_RETURN)) {
 			switch (active) {
 			case CARRACE:
 				g.openScreen(new Race(g));
@@ -59,10 +37,6 @@ public class Menu extends GameScreenAB {
 			default:
 				break;
 			}
-			break;
-
-		default:
-			break;
 		}
 	}
 
@@ -85,16 +59,6 @@ public class Menu extends GameScreenAB {
 
 	@Override
 	public void setUpObjects() {
-		m_camera.getTransform().setExtents(
-		        PhysicsCarRace.WINDOW_DIMENSIONS[0] / 2,
-		        PhysicsCarRace.WINDOW_DIMENSIONS[1] / 2);
-
-		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit
-		        | DebugDraw.e_pairBit);
-		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit |
-		// DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		m_dd.setViewportTransform(m_camera.getTransform());
-
-		Keyboard.enableRepeatEvents(true);
+		super.setUpObjects();
 	}
 }

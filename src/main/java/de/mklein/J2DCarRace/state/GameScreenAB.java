@@ -17,7 +17,7 @@ public class GameScreenAB implements GameScreenIF {
 	protected final Camera m_camera = new Camera(new Vec2(0.0f, 5.0f), 40.0f, 0.05f);
 	protected final PhysicsCarRace g;
 	protected final Vec2 mouseWorld = new Vec2();
-
+	
 	public GameScreenAB(PhysicsCarRace g) {
 		this.g = g;
 	}
@@ -30,13 +30,9 @@ public class GameScreenAB implements GameScreenIF {
 		m_world.step(1 / 60f, 8, 3);
 	}
 
-	@Override
-	public void input() {
-		// Camera scrolling
-		// mouse in screen - camera in screen
+	protected void scrollCamera() {
 		if (Mouse.isInsideWindow()) {
-			Vec2 mousePosScreen = new Vec2((float) Mouse.getX(),
-					(float) Mouse.getY());
+			Vec2 mousePosScreen = new Vec2((float) Mouse.getX(), (float) Mouse.getY());
 			Vec2 mousePosScaled = new Vec2(mousePosScreen.x
 					/ PhysicsCarRace.WINDOW_DIMENSIONS[0], mousePosScreen.y
 					/ PhysicsCarRace.WINDOW_DIMENSIONS[1]);
@@ -52,15 +48,28 @@ public class GameScreenAB implements GameScreenIF {
 			// m_dd.drawString(30, 54, "Scroll: " + scroll.toString(),
 			// Color3f.WHITE);
 			m_camera.getTransform().setCenter(m_camera.getTransform().getCenter().add(scroll));
+		}		
+	}
 	
+	protected void zoomCamera() {
+		if (Mouse.isInsideWindow()) {
 			// Camera zooming
+			Vec2 zoomPoint = new Vec2(Mouse.getX(), Mouse.getY());
 			int notches = Mouse.getDWheel();
 			if (notches != 0) {
 				Camera.ZoomType zoom = notches < 0 ? Camera.ZoomType.ZOOM_OUT
 						: Camera.ZoomType.ZOOM_IN;
-				m_camera.zoomToPoint(mousePosScreen, zoom);
+				m_camera.zoomToPoint(zoomPoint, zoom);
 			}
-		}
+		}		
+	}
+	
+	@Override
+	public void input() {
+		// Camera scrolling
+		scrollCamera();
+		//Camera zooming by default to the actual mouse position
+		zoomCamera();
 	}
 
 	@Override

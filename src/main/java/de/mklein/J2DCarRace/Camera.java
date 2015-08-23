@@ -59,6 +59,15 @@ public class Camera {
 	   * Zooms the camera to a point on the screen. The zoom amount is given on camera initialization.
 	   */
 	  public void zoomToPoint(Vec2 screenPosition, ZoomType zoomType) {
+		Vec2 worldPostiton = new Vec2();
+		transform.getScreenToWorld(screenPosition, worldPostiton);
+	    zoomToWorldPoint(worldPostiton, zoomType);
+	  }
+
+	  /**
+	   * Zooms the camera to a point on the screen. The zoom amount is given on camera initialization.
+	   */
+	  public void zoomToWorldPoint(Vec2 worldPosition, ZoomType zoomType) {
 	    Mat22 zoom;
 	    switch (zoomType) {
 	      case ZOOM_IN:
@@ -72,9 +81,9 @@ public class Camera {
 	        return;
 	    }
 
-	    transform.getScreenToWorld(screenPosition, oldCenter);
+	    oldCenter.set(new Vec2(worldPosition));
 	    transform.mulByTransform(zoom);
-	    transform.getScreenToWorld(screenPosition, newCenter);
+	    newCenter.set(new Vec2(worldPosition));
 
 	    Vec2 transformedMove = oldCenter.subLocal(newCenter);
 	    // set, just in case bad impl by someone

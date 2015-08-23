@@ -9,10 +9,7 @@ import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
 import org.jbox2d.dynamics.joints.MouseJoint;
 import org.jbox2d.dynamics.joints.MouseJointDef;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
 
-import de.mklein.J2DCarRace.Camera;
 import de.mklein.J2DCarRace.PhysicsCarRace;
 
 public class Towerbuilder extends GameScreenAB {
@@ -28,49 +25,24 @@ public class Towerbuilder extends GameScreenAB {
 	}
 
 	public void logic() {
+		if(g.getFramecounter() % 60 == 0) {
+			// every second
+			spawnTiles();
+		}
 		super.logic();
 	}
 
 	@Override
 	public void input() {
 		super.input();
-		// Camera scrolling
-		// mouse in screen - camera in screen
-		if (Mouse.isInsideWindow()) {
-			Vec2 mousePosScreen = new Vec2((float) Mouse.getX(),
-					(float) Mouse.getY());
-			Vec2 mousePosScaled = new Vec2(mousePosScreen.x
-					/ PhysicsCarRace.WINDOW_DIMENSIONS[0], mousePosScreen.y
-					/ PhysicsCarRace.WINDOW_DIMENSIONS[1]);
-			Vec2 screenCenter = new Vec2(0.5f, 0.5f);
-			Vec2 offset = mousePosScaled.sub(screenCenter);
-			float scrollX = Math.abs(offset.x) - 0.35f, scrollY = Math
-					.abs(offset.y) - 0.35f;
-			Vec2 scroll = new Vec2(Math.signum(offset.x)
-					* ((scrollX > 0.0f) ? scrollX : 0.0f),
-					Math.signum(offset.y) * ((scrollY > 0.0f) ? scrollY : 0.0f));
-			// m_dd.drawString(30, 30, "Mousepos: " + offset.toString(),
-			// Color3f.WHITE);
-			// m_dd.drawString(30, 54, "Scroll: " + scroll.toString(),
-			// Color3f.WHITE);
-			m_camera.getTransform().setCenter(m_camera.getTransform().getCenter().add(scroll));
-
-			// Camera zooming
-			int notches = Mouse.getDWheel();
-			if (notches != 0) {
-				Camera.ZoomType zoom = notches < 0 ? Camera.ZoomType.ZOOM_OUT
-						: Camera.ZoomType.ZOOM_IN;
-				m_camera.zoomToPoint(mousePosScreen, zoom);
-			}
-		}
 	}
 
 	@Override
 	public void keystrokes() {
 		super.keystrokes();
-		if(g.pressedOnce(Keyboard.KEY_S)) {
-			spawnBox();
-		}
+//		if(g.pressedOnce(Keyboard.KEY_S)) {
+//			spawnTiles();
+//		}
 	}
 
 	public void setUpObjects() {
@@ -82,7 +54,7 @@ public class Towerbuilder extends GameScreenAB {
 		groundDef.type = BodyType.STATIC;
 		m_ground = m_world.createBody(groundDef);
 		FixtureDef groundFixture = new FixtureDef();
-		groundFixture.density = 1;
+		groundFixture.density = 0.0f;
 		groundFixture.friction = 1.0f;
 		groundFixture.restitution = 0.3f;
 		PolygonShape groundShape = new PolygonShape();
@@ -90,33 +62,69 @@ public class Towerbuilder extends GameScreenAB {
 		groundFixture.shape = groundShape;
 		m_ground.createFixture(groundFixture);
 
-		spawnBox();
+		createBaseTile();
 	}
 	
-	public void spawnBox() {
-		generateTile(new Random().nextInt(7));
+	public void createBaseTile() {
+		Vec2 baseTile[] = new Vec2[] {
+				new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(3.0f, 0.0f),
+				new Vec2(4.0f, 0.0f), new Vec2(5.0f, 0.0f), new Vec2(6.0f, 0.0f), new Vec2(7.0f, 0.0f)}; // base tile
+		BodyDef bd = new BodyDef();
+		bd.type = BodyType.STATIC;
+		bd.setPosition(new Vec2(-4.0f, 1.5f));
+		Body tile = m_world.createBody(bd);
+		PolygonShape box = new PolygonShape();
+		final float density = 0.0f;
+		for (int i=0; i<8; i++) {
+			box.setAsBox(0.5f - 0.01f, 0.5f - 0.01f, baseTile[i], 0.0f);
+			tile.createFixture(box, density);
+		} 
 	}
 	
-	public void generateTile(Integer number) {
+	public void spawnTiles() {
+		Vec2 tileBoxes[] = new Vec2[] {
+				new Vec2(8.0f,  2.0f),
+				new Vec2(13.0f, 2.0f),
+				new Vec2(18.0f, 2.0f),
+			};
+		
+		AABB queryAABB = new AABB();
+		FindFirstFixtureQueryCallback callback = new FindFirstFixtureQueryCallback();
+		for(int i = 0; i<tileBoxes.length; i++) {
+			queryAABB.lowerBound.set(tileBoxes[i].x - 2.0f, tileBoxes[i].y - 2.0f);
+			queryAABB.upperBound.set(tileBoxes[i].x + 2.0f, tileBoxes[i].y + 2.0f);
+			callback.found = false;
+			m_world.queryAABB(callback, queryAABB);
+			if (!callback.found) {
+				generateTile(new Random().nextInt(7), tileBoxes[i]);
+			}
+		}
+	}
+	
+	public void generateTile(Integer number, Vec2 startingPos) {
 		Vec2 tiles[][] = new Vec2[][] {
-				new Vec2[] {new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(3.0f, 0.0f)}, // | shape
-				new Vec2[] {new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(1.0f, 1.0f)}, // _|_ shape
-				new Vec2[] {new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(0.0f, 1.0f), new Vec2(1.0f, 1.0f)}, // box shape
-				new Vec2[] {new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(2.0f, 1.0f)}, // L shape
-				new Vec2[] {new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(0.0f, 1.0f)}, // Rev-L shape
-				new Vec2[] {new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(1.0f, 1.0f), new Vec2(2.0f, 1.0f)}, // Z shape
-				new Vec2[] {new Vec2(0.0f, 1.0f), new Vec2(1.0f, 1.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f)}, // Rev-Z shape
+				new Vec2[] {new Vec2(-1.0f, 0.0f), new Vec2(0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f)}, // | shape
+				new Vec2[] {new Vec2( 0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(1.0f, 1.0f)}, // _|_ shape
+				new Vec2[] {new Vec2( 0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(0.0f, 1.0f), new Vec2(1.0f, 1.0f)}, // box shape
+				new Vec2[] {new Vec2( 0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(2.0f, 1.0f)}, // L shape
+				new Vec2[] {new Vec2( 0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f), new Vec2(0.0f, 1.0f)}, // Rev-L shape
+				new Vec2[] {new Vec2( 0.0f, 0.0f), new Vec2(1.0f, 0.0f), new Vec2(1.0f, 1.0f), new Vec2(2.0f, 1.0f)}, // Z shape
+				new Vec2[] {new Vec2( 0.0f, 1.0f), new Vec2(1.0f, 1.0f), new Vec2(1.0f, 0.0f), new Vec2(2.0f, 0.0f)}, // Rev-Z shape
 		};
 		
 		BodyDef bd = new BodyDef();
 		bd.type = BodyType.DYNAMIC;
-		bd.setPosition(new Vec2(0.0f, 5.0f));
+		bd.setPosition(startingPos);
 		Body tile = m_world.createBody(bd);
 		PolygonShape box = new PolygonShape();
-		final float density = 1.0f;
+		FixtureDef tileFixture = new FixtureDef();
+		tileFixture.density = 1.0f;
+		tileFixture.friction = 1.0f;
+		tileFixture.restitution = 0.3f;
 		for (int i=0; i<4; i++) {
-			box.setAsBox(0.5f, 0.5f, tiles[number][i], 0.0f);
-			tile.createFixture(box, density);
+			box.setAsBox(0.5f - 0.01f, 0.5f - 0.01f, tiles[number][i], 0.0f);
+			tileFixture.shape = box;
+			tile.createFixture(tileFixture);
 		} 
 	}
 
@@ -151,7 +159,7 @@ public class Towerbuilder extends GameScreenAB {
 	/************ MOUSE JOINT ************/
 
 	private final AABB queryAABB = new AABB();
-	private final TestQueryCallback callback = new TestQueryCallback();
+	private final PointInsideFixtureQueryCallback callback = new PointInsideFixtureQueryCallback();
 	private MouseJoint mouseJoint;
 
 	private void spawnMouseJoint(Vec2 p) {
@@ -192,22 +200,22 @@ public class Towerbuilder extends GameScreenAB {
 
 }
 
-class TestQueryCallback implements QueryCallback {
+class PointInsideFixtureQueryCallback implements QueryCallback {
 
 	public final Vec2 point;
 	public Fixture fixture;
 
-	public TestQueryCallback() {
+	public PointInsideFixtureQueryCallback() {
 		point = new Vec2();
 		fixture = null;
 	}
 
-	public boolean reportFixture(Fixture argFixture) {
-		Body body = argFixture.getBody();
+	public boolean reportFixture(Fixture fixture) {
+		Body body = fixture.getBody();
 		if (body.getType() == BodyType.DYNAMIC) {
-			boolean inside = argFixture.testPoint(point);
+			boolean inside = fixture.testPoint(point);
 			if (inside) {
-				fixture = argFixture;
+				this.fixture = fixture;
 
 				return false;
 			}
@@ -216,3 +224,17 @@ class TestQueryCallback implements QueryCallback {
 		return true;
 	}
 }
+
+class FindFirstFixtureQueryCallback implements QueryCallback {
+	public Boolean found = false;
+
+	@Override
+	public boolean reportFixture(Fixture fixture) {
+		Body body = fixture.getBody();
+		if (body.getType() == BodyType.DYNAMIC) {
+			found = true;
+			return false;
+		}
+		return true;
+	}
+};
