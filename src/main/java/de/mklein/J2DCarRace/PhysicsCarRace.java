@@ -17,8 +17,8 @@ import de.mklein.J2DCarRace.state.Menu;
 
 public class PhysicsCarRace {
 
-	public static final String 		WINDOW_TITLE      	= "J2D Car Race";
-	public static final int[]  		WINDOW_DIMENSIONS 	= { 800, 600 };
+	public static final String 		WINDOW_TITLE      	        = "J2D Car Race";
+	public static final int[]  		WINDOW_DEFAULT_DIMENSIONS 	= { 800, 600 };
 	
 	private GameScreenIF 	   		m_screen 			= null;
 	private Stack<GameScreenIF> 	m_screenStack		= new Stack<GameScreenIF>();
@@ -48,7 +48,7 @@ public class PhysicsCarRace {
 			cleanUp(false);
 		}
 		m_screen = m_screenStack.pop();
-		setUpObjects();
+//		setUpObjects();
 		setUpMatrices();
 	}
 	
@@ -63,8 +63,9 @@ public class PhysicsCarRace {
 
 	private void setUpDisplay() {
 		try {
-			Display.setDisplayMode(new DisplayMode(WINDOW_DIMENSIONS[0], WINDOW_DIMENSIONS[1]));
+			Display.setDisplayMode(new DisplayMode(WINDOW_DEFAULT_DIMENSIONS[0], WINDOW_DEFAULT_DIMENSIONS[1]));
 			Display.setTitle(WINDOW_TITLE);
+			Display.setResizable(true);
 			Display.create();
 
 			glEnable(GL_BLEND);
@@ -81,17 +82,6 @@ public class PhysicsCarRace {
     }
 
 	private void setUpMatrices() {
-		glMatrixMode(GL_PROJECTION);
-	    glLoadIdentity();
-		glOrtho(0, PhysicsCarRace.WINDOW_DIMENSIONS[0], 0, PhysicsCarRace.WINDOW_DIMENSIONS[1], 1, -1);
-		
-		glMatrixMode(GL_MODELVIEW);
-	    glLoadIdentity();
-	    glViewport(0, 0, PhysicsCarRace.WINDOW_DIMENSIONS[0], PhysicsCarRace.WINDOW_DIMENSIONS[1]);
-	    
-	    // Disable texturing in the beginning
-		glDisable(GL_TEXTURE_2D);
-
 		m_screen.setUpMatrices();
     }
 	
@@ -126,7 +116,7 @@ public class PhysicsCarRace {
 					// Key is released
 				}
 				break;
-			}			
+			}
 		}
 		
 		while(Mouse.next()) {

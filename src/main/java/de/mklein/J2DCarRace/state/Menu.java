@@ -38,6 +38,7 @@ public class Menu extends GameScreenAB {
 				break;
 			}
 		}
+		super.keystrokes();
 	}
 
 	private MenuItems ringCount(int value, int length) {

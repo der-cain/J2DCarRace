@@ -1,10 +1,15 @@
 package de.mklein.J2DCarRace.state;
 
+import static org.lwjgl.opengl.GL11.*;
+
 import org.jbox2d.callbacks.DebugDraw;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.World;
+import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.DisplayMode;
 
 import de.mklein.J2DCarRace.Camera;
 import de.mklein.J2DCarRace.PhysicsCarRace;
@@ -33,9 +38,8 @@ public class GameScreenAB implements GameScreenIF {
 	protected void scrollCamera() {
 		if (Mouse.isInsideWindow()) {
 			Vec2 mousePosScreen = new Vec2((float) Mouse.getX(), (float) Mouse.getY());
-			Vec2 mousePosScaled = new Vec2(mousePosScreen.x
-					/ PhysicsCarRace.WINDOW_DIMENSIONS[0], mousePosScreen.y
-					/ PhysicsCarRace.WINDOW_DIMENSIONS[1]);
+			Vec2 mousePosScaled = new Vec2(mousePosScreen.x / Display.getWidth(),
+					mousePosScreen.y / Display.getHeight());
 			Vec2 screenCenter = new Vec2(0.5f, 0.5f);
 			Vec2 offset = mousePosScaled.sub(screenCenter);
 			float scrollX = Math.abs(offset.x) - 0.35f, scrollY = Math
@@ -74,28 +78,48 @@ public class GameScreenAB implements GameScreenIF {
 
 	@Override
 	public void keystrokes() {
-		// Do nothing
+		if (g.pressedOnce(Keyboard.KEY_F11)) {
+			try {
+				if (Display.isFullscreen()) {
+					Display.setDisplayMode(new DisplayMode(
+					        PhysicsCarRace.WINDOW_DEFAULT_DIMENSIONS[0],
+					        PhysicsCarRace.WINDOW_DEFAULT_DIMENSIONS[1]));
+					Display.setFullscreen(false);
+				} else {
+					Display.setDisplayModeAndFullscreen(Display
+					        .getDesktopDisplayMode());
+				}
+				setUpMatrices();
+			} catch (LWJGLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void setUpObjects() {
-	
 		Keyboard.enableRepeatEvents(true);
-	
-		m_camera.getTransform().setExtents(
-				PhysicsCarRace.WINDOW_DIMENSIONS[0] / 2,
-				PhysicsCarRace.WINDOW_DIMENSIONS[1] / 2);
-	
-		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit);
-		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit |
-		// DebugDraw.e_jointBit | DebugDraw.e_pairBit);
-		m_dd.setViewportTransform(m_camera.getTransform());
+		m_dd.setFlags(DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_aabbBit);
+		// dd.setFlags(DebugDraw.e_wireframeDrawingBit | DebugDraw.e_shapeBit | DebugDraw.e_jointBit | DebugDraw.e_pairBit);
 		m_world.setDebugDraw(m_dd);
 	}
 
 	@Override
 	public void setUpMatrices() {
-		// done in the main program
-	
+		m_camera.getTransform().setExtents(
+				Display.getWidth()  / 2,
+		        Display.getHeight() / 2);
+		m_dd.setViewportTransform(m_camera.getTransform());
+
+		glMatrixMode(GL_PROJECTION);
+	    glLoadIdentity();
+		glOrtho(0, Display.getWidth(), 0, Display.getHeight(), 1, -1);
+		
+		glMatrixMode(GL_MODELVIEW);
+	    glLoadIdentity();
+	    glViewport(0, 0, Display.getWidth(), Display.getHeight());
+	    
+	    // Disable texturing in the beginning
+		glDisable(GL_TEXTURE_2D);
 	}
 
 	@Override

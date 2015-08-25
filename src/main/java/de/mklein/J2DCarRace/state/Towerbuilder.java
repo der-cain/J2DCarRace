@@ -120,7 +120,7 @@ public class Towerbuilder extends GameScreenAB {
 		FixtureDef tileFixture = new FixtureDef();
 		tileFixture.density = 1.0f;
 		tileFixture.friction = 1.0f;
-		tileFixture.restitution = 0.3f;
+		tileFixture.restitution = 0.0f;
 		for (int i=0; i<4; i++) {
 			box.setAsBox(0.5f - 0.01f, 0.5f - 0.01f, tiles[number][i], 0.0f);
 			tileFixture.shape = box;
